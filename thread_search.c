@@ -5,6 +5,12 @@
 #include <string.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <pthread.h>
+
+//thread_search.c
+//uses my<file_search.c as a baseline recursive search algorithm
+//uses multiple threads to search for the specified file
+
 
 //takes a file/dir as argument, recurses,
 // prints name if empty dir or not a dir (leaves)
@@ -12,6 +18,10 @@ void recur_file_search(char *file);
 
 //share search term globally (rather than passing recursively)
 const char *search_term;
+
+const int THREADS = 1;
+
+
 
 int main(int argc, char **argv)
 {
@@ -22,6 +32,13 @@ int main(int argc, char **argv)
 				<search_term> starting at <dir>\n");
 		exit(1);
 	}
+
+	//declares the array of pthreads
+	pthread_t threads[THREADS];
+
+	//a counter for the current number of working threads
+	int threadCount = 0;
+
 
 	//don't need to bother checking if term/directory are swapped, since we can't
 	// know for sure which is which anyway
@@ -36,12 +53,29 @@ int main(int argc, char **argv)
 		perror("opendir failed");
 		exit(1);
 	}
+
+	struct dirent *cFile;
 	
 	//start timer for recursive search
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 
+	//loops through all entries of the staring directrory to assigne threads
+	while ((cFIle = readdir(dir)) != NULL)
+	{
+	
+	
+	
+	
+	}
+	
+
+
+
 	recur_file_search(argv[2]);
+
+	
+
 
 	gettimeofday(&end, NULL);
 	printf("Time: %ld\n", (end.tv_sec * 1000000 + end.tv_usec)
