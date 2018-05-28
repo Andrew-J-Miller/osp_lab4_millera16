@@ -14,7 +14,7 @@
 
 //takes a file/dir as argument, recurses,
 // prints name if empty dir or not a dir (leaves)
-void recur_file_search(char *file);
+void *recur_file_search(char *file);
 
 //share search term globally (rather than passing recursively)
 const char *search_term;
@@ -39,6 +39,8 @@ int main(int argc, char **argv)
 	//a counter for the current number of working threads
 	int threadCount = 0;
 
+	int i = 0;
+
 
 	//don't need to bother checking if term/directory are swapped, since we can't
 	// know for sure which is which anyway
@@ -56,6 +58,8 @@ int main(int argc, char **argv)
 
 	struct dirent *cFile;
 	
+	char *next;
+
 	//start timer for recursive search
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
@@ -63,7 +67,30 @@ int main(int argc, char **argv)
 	//loops through all entries of the staring directrory to assigne threads
 	while ((cFIle = readdir(dir)) != NULL)
 	{
-	
+		//. and .. need to be excluded from the search
+		if (strcmp(cFile->d_name, "..") != 0 && strcmp(cFile->d_name, ".")!= 0)
+		{
+			//this next section of code is formatting each file in the directory to be a full filepath
+			*next = malloc(sizeof(char)*strlen(cFile->d_name)+strlen(dir)+2);
+			strncpy(next, dir, strlen(dir));
+			strncpy(next + strlen(dir), "/", 1);
+			strncpy(next + strlen(dir) + 1, cFile->d_name, strlen(cFile->d_name)+1);
+			//Now that the string formatting is taken care of, threads can be assigned to recurse on these filepaths
+			if (threadCount == THREADS)
+			{
+			//wait for threads to complete before reassignment
+				for (i = 0; i < THREADS; i++)
+				{
+					pthread_join(threads[i], NULL);
+				}
+				//Reset threadCount to 0
+				threadCount = 0;
+
+			}
+			pthread_create(&threads[threadCount], NULL, recur_file_search, (void*)next);
+			threadCount++;
+			free(next);
+		}	
 	
 	
 	
@@ -72,7 +99,6 @@ int main(int argc, char **argv)
 
 
 
-	recur_file_search(argv[2]);
 
 	
 
@@ -95,7 +121,7 @@ int main(int argc, char **argv)
 //Effects: prints the filename if the base case is reached *and* search_term
 // is found in the filename; otherwise, prints the directory name if the directory
 // matches search_term.
-void recur_file_search(char *file)
+void *recur_file_search(char *file)
 {
 	//check if directory is actually a file
 	DIR *d = opendir(file);
