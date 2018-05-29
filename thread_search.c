@@ -19,7 +19,7 @@ void *recur_file_search(char *file);
 //share search term globally (rather than passing recursively)
 const char *search_term;
 
-const int THREADS = 1;
+const int THREADS = 4;
 
 
 
@@ -58,23 +58,24 @@ int main(int argc, char **argv)
 
 	struct dirent *cFile;
 	
-	char *next;
+	//char *next;
 
 	//start timer for recursive search
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 
 	//loops through all entries of the staring directrory to assigne threads
-	while ((cFIle = readdir(dir)) != NULL)
+	while ((cFile = readdir(dir)) != NULL)
 	{
 		//. and .. need to be excluded from the search
 		if (strcmp(cFile->d_name, "..") != 0 && strcmp(cFile->d_name, ".")!= 0)
 		{
 			//this next section of code is formatting each file in the directory to be a full filepath
-			*next = malloc(sizeof(char)*strlen(cFile->d_name)+strlen(dir)+2);
-			strncpy(next, dir, strlen(dir));
-			strncpy(next + strlen(dir), "/", 1);
-			strncpy(next + strlen(dir) + 1, cFile->d_name, strlen(cFile->d_name)+1);
+			char *next =malloc(sizeof(char)*strlen(cFile->d_name)+strlen(argv[2])+1);
+			strncpy(next, argv[2], strlen(argv[2]));
+			strncat(next,cFile->d_name, strlen(cFile->d_name));
+			strncat(next, "/", 1);
+			//strncpy((next+strlen(argv[2])+1), cFile->d_name, strlen(cFile->d_name)+1);
 			//Now that the string formatting is taken care of, threads can be assigned to recurse on these filepaths
 			if (threadCount == THREADS)
 			{
