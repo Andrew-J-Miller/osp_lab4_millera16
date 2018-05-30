@@ -6,6 +6,9 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <pthread.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<sys/stat.h>
 
 //thread_search.c
 //uses my<file_search.c as a baseline recursive search algorithm
@@ -21,7 +24,7 @@ const char *search_term;
 
 const int THREADS = 4;
 
-
+int isfile(const char *path);
 
 int main(int argc, char **argv)
 {
@@ -74,7 +77,13 @@ int main(int argc, char **argv)
 			char *next =malloc(sizeof(char)*strlen(cFile->d_name)+strlen(argv[2])+1);
 			strncpy(next, argv[2], strlen(argv[2]));
 			strncat(next,cFile->d_name, strlen(cFile->d_name));
-			strncat(next, "/", 1);
+			if (isfile(next) == 0 )
+			{
+				strncat(next, "/", 1);
+			
+			}
+			printf("%s\n",next);
+			//failing b/c files are getting a slash. check for directory here.
 			//strncpy((next+strlen(argv[2])+1), cFile->d_name, strlen(cFile->d_name)+1);
 			//Now that the string formatting is taken care of, threads can be assigned to recurse on these filepaths
 			if (threadCount == THREADS)
@@ -86,13 +95,12 @@ int main(int argc, char **argv)
 				}
 				//Reset threadCount to 0
 				threadCount = 0;
-
 			}
 			pthread_create(&threads[threadCount], NULL, recur_file_search, (void*)next);
 			threadCount++;
 			free(next);
 		}	
-	
+		closedir(dir);
 	
 	
 	}
@@ -110,6 +118,20 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
+
+
+
+int isfile(const char *path)
+{
+	struct stat path_stat;
+	stat(path, &path_stat);
+	return S_ISREG(path_stat.st_mode);
+
+
+
+}
+
 
 
 //This function takes a path to recurse on, searching for mathes to the
